@@ -10,7 +10,7 @@ import evaluate
 from datasets import load_dataset, Dataset
 import sys
 # Add your path here sys.path.append("/your_path/g2")
-sys.path.append("/workspace/CODE/g2")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 from eval.utils import (
     generate_completions,
     load_lm_and_tokenizer,

@@ -12,4 +12,4 @@ python -m eval.xlsum.run_sample \
         --top_k $top_k \
         --top_p $top_p \
         --min_p $min_p \
-        --pos_or_neg base \
+        --pos_or_neg base

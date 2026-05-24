@@ -13,4 +13,4 @@ python -m eval.wmt.run_sample \
         --top_p $top_p \
         --top_k $top_k \
         --min_p $min_p \
-        --pos_or_neg base \
+        --pos_or_neg base

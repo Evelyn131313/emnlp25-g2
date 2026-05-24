@@ -17,7 +17,7 @@ import click
 import pandas as pd
 import os
 import sys
-sys.path.append('/mnt/workspace/junyue/CODE/regen/eval')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from diversity import DEFAULT_CONFIGS, calculate_diversity_metrics
 import argparse
 
