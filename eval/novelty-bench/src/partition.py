@@ -1,3 +1,24 @@
+# Pipeline: run_eval.py → partition.py → score.py → summarize.py
+#
+# Stage 1 of 3 (diversity): groups the N raw generations per prompt into
+# equivalence classes using a DeBERTa classifier
+# (yimingzhang/deberta-v3-large-generation-similarity, threshold 0.102).
+#
+# Reads:  {eval_dir}/generations.jsonl
+#   {
+#     "id": "...",
+#     "prompt": "...",
+#     "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+#     "generations": ["response1", "response2", ...]   # N responses per prompt
+#   }
+#
+# Writes: {eval_dir}/partitions.jsonl  (adds partition + distinct)
+#   {
+#     ...                      # all fields from generations.jsonl
+#     "partition": [0, 0, 1, 2, 1],  # equivalence class index for each response
+#     "distinct": 2            # max(partition), i.e. number of unique classes - 1
+#   }
+
 import argparse
 import asyncio
 import functools

@@ -282,31 +282,7 @@ conda activate g2
 bash scripts/eval/novelty/run_eval.sh
 ```
 
-This script runs generation then automatically switches to `g2_eval` for scoring:
-
-```bash
-# Generation (g2 env)
-export CUDA_VISIBLE_DEVICES=0
-python eval/novelty-bench/src/run_eval.py \
-    --model_name_or_path meta-llama/Meta-Llama-3-8B-Instruct \
-    --data curated \
-    --eval-dir results/novelty/g2_theta0.3_temp1 \
-    --iter_num 10 \
-    --temperature 1 \
-    --theta 0.3
-
-# Evaluation (g2_eval env)
-python eval/novelty-bench/src/partition.py \
-    --eval-dir results/novelty/g2_theta0.3_temp1 \
-    --alg classifier
-
-python eval/novelty-bench/src/score.py \
-    --eval-dir results/novelty/g2_theta0.3_temp1 \
-    --patience 0.8
-
-python eval/novelty-bench/src/summarize.py \
-    --eval-dir results/novelty/g2_theta0.3_temp1
-```
+This script runs generation then automatically switches to `g2_eval` for scoring.(partition + score + summarize)
 
 #### Step 2 — Run Sampling Baselines (optional)
 
@@ -330,6 +306,46 @@ Equivalent command:
 python eval/calculate_div.py \
     --file results/novelty/g2_theta0.3_temp1.0 \
     --task curated
+```
+
+#### Generation Script Details: `run_eval.py`
+
+`run_eval.py` implements the G2 iterative generation loop for NoveltyBench. It produces `iter_num` (default 10) diverse responses per prompt through the following stages:
+
+| Iteration | Model                     | Behavior                                                                                                                                |
+| --------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| i = 0     | Base model (transformers) | Greedy decode (`do_sample=False`); establishes the first response                                                                     |
+| i = 1     | DExperts model loaded     | First G2-guided generation using the i=0 output as context                                                                              |
+| i ≥ 1    | DExperts model (reused)   | G2-guided generation; three prompts are constructed per example                                                                         |
+| i ≥ 3    | DExperts model (reused)   | Context is compressed: only the 3 most diverse previous responses are passed (selected by cosine similarity on hidden-state embeddings) |
+
+**Per-iteration prompt construction (i ≥ 1):**
+
+- `base_prompt` — the original question, chat-templated
+- `pos_prompt` (positive guide) — lists previous responses and instructs the model to generate a response using *different* methods or approaches
+- `neg_prompt` (negative guide) — instructs the model to replicate previous responses exactly (acts as a repulsion anchor)
+
+The DExperts decoding combines logits from all three:
+
+```
+logits_final = logits_base + theta * (logits_pos - logits_neg)
+```
+
+with `theta` applied only at high-entropy token positions (controlled by `--theta`).
+
+**Embedding-based context selection (i ≥ 3):**
+
+After each generation, the script encodes the response into a hidden-state embedding (mean of last-layer hidden states over generated tokens, L2-normalized). From i=3 onward, it selects the 3 most mutually dissimilar responses via greedy max-min cosine similarity, shuffles their order, and uses only those as the context for the next iteration. This prevents the positive/negative prompts from growing too long and keeps the context maximally informative.
+
+**Output:** `{eval_dir}/generations.jsonl` — one JSON object per prompt:
+
+```json
+{
+  "id": "...",
+  "prompt": "...",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "generations": ["response_0", "response_1", ..., "response_9"]
+}
 ```
 
 #### Evaluation Pipeline Details

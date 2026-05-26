@@ -1,3 +1,26 @@
+# Pipeline: run_eval.py → partition.py → score.py → summarize.py
+#
+# Stage 2 of 3 (quality): scores each generation with a reward model
+# (Skywork-Reward-Gemma-2-27B-v0.2) and maps raw logits to a 1–10 scale
+# via fixed thresholds.
+#
+# Reads:  {eval_dir}/partitions.jsonl
+#   {
+#     "id": "...",
+#     "prompt": "...",
+#     "model": "...",
+#     "generations": ["response1", "response2", ...],
+#     "partition": [0, 0, 1, 2, 1],
+#     "distinct": 2
+#   }
+#
+# Writes: {eval_dir}/scores.jsonl  (adds scores + mean_scores)
+#   {
+#     ...                      # all fields from partitions.jsonl
+#     "scores": [7, 6, 8, 5, 7],  # per-response quality score (1–10 int)
+#     "mean_scores": 6.6           # mean of scores for this prompt
+#   }
+
 import argparse
 import asyncio
 import bisect

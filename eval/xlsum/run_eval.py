@@ -19,6 +19,8 @@ from eval.utils import (
 )
 import transformers 
 from fraction import Fraction
+import nltk
+nltk.download('punkt_tab', quiet=True)
 from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 from nltk.tokenize import word_tokenize
 from rouge_score import rouge_scorer
