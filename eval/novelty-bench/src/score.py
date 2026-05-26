@@ -117,7 +117,7 @@ async def process_instances(instances, output_file, patience):
     # Check if file exists and has matching keys
     if os.path.exists(output_file):
         try:
-            existing_output = load_dataset("json", data_files=output_file, split="train")
+            existing_output = datasets.Dataset.from_json(output_file)
             if not set(instances["id"]) - set(existing_output["id"]):
                 print("All prompts are scored. Skipping.")
                 return
@@ -161,11 +161,7 @@ async def main():
     args = parser.parse_args()
 
     eval_dir = args.eval_dir
-    instances = load_dataset(
-        "json",
-        data_files=os.path.join(eval_dir, "partitions.jsonl"),
-        split="train",
-    )
+    instances = datasets.Dataset.from_json(os.path.join(eval_dir, "partitions.jsonl"))
 
     os.makedirs(eval_dir, exist_ok=True)
 

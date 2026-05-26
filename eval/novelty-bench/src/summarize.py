@@ -46,7 +46,10 @@ def main():
     args = parser.parse_args()
 
     eval_dir = args.eval_dir
-    df = pd.read_json(os.path.join(eval_dir, "scores.jsonl"), lines=True)
+    scores_path = os.path.join(eval_dir, "scores.jsonl")
+    if not os.path.exists(scores_path) or os.path.getsize(scores_path) == 0:
+        raise FileNotFoundError(f"scores.jsonl is missing or empty at {scores_path}. Run score.py first.")
+    df = pd.read_json(scores_path, lines=True)
     summary = summarize(df)
     with open(os.path.join(eval_dir, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
