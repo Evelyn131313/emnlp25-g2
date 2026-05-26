@@ -1,0 +1,34 @@
+/project/xiwenliu/conda/envs/g2_eval/lib/python3.10/site-packages/transformers/tokenization_utils_base.py:1617: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be deprecated in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+/project/xiwenliu/conda/envs/g2_eval/lib/python3.10/site-packages/nltk/translate/bleu_score.py:577: UserWarning: 
+The hypothesis contains 0 counts of 4-gram overlaps.
+Therefore the BLEU score evaluates to 0, independently of
+how many N-gram overlaps of lower order it contains.
+Consider using lower n-gram order or use SmoothingFunction()
+  warnings.warn(_msg)
+/project/xiwenliu/conda/envs/g2_eval/lib/python3.10/site-packages/nltk/translate/bleu_score.py:577: UserWarning: 
+The hypothesis contains 0 counts of 2-gram overlaps.
+Therefore the BLEU score evaluates to 0, independently of
+how many N-gram overlaps of lower order it contains.
+Consider using lower n-gram order or use SmoothingFunction()
+  warnings.warn(_msg)
+/project/xiwenliu/conda/envs/g2_eval/lib/python3.10/site-packages/nltk/translate/bleu_score.py:577: UserWarning: 
+The hypothesis contains 0 counts of 3-gram overlaps.
+Therefore the BLEU score evaluates to 0, independently of
+how many N-gram overlaps of lower order it contains.
+Consider using lower n-gram order or use SmoothingFunction()
+  warnings.warn(_msg)
+diversity_metrics_config
+{'ead_averaged_distinct_ngrams': {'n_min': 1, 'n_max': 5, 'vocab_size': 50257}, 'sent_bert_from_sim': {}}
+calculating per-input diversities
+Average per-input diversities:
+{'mean_per_input_ead_averaged_distinct_ngrams': 0.7677311715132492, 'mean_per_input_sent_bert_from_sim': 0.3644119337201118}
+Std per-input diversities:
+{'std_per_input_ead_averaged_distinct_ngrams': 0.10335740876807749, 'std_per_input_sent_bert_from_sim': 0.1165514567910176}
+curated eval: results/novelty/g2_theta0.3_temp1/generations.jsonl
+{'mean_per_input_ead_averaged_distinct_ngrams': 0.7677311715132492, 'mean_per_input_sent_bert_from_sim': 0.3644119337201118, 'std_per_input_ead_averaged_distinct_ngrams': 0.10335740876807749, 'std_per_input_sent_bert_from_sim': 0.1165514567910176}
+results/novelty/g2_theta0.3_temp1/generations.jsonl
+20
+n: 4
+20
+qs avg scores: 62.75%
