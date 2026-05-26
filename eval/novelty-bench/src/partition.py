@@ -222,7 +222,7 @@ async def process_instances(instances, output_file, equivalence_alg):
     # Check if file exists and has matching keys
     if os.path.exists(output_file):
         try:
-            existing_output = load_dataset("json", data_files=output_file, split="train")
+            existing_output = datasets.Dataset.from_json(output_file)
             if not set(instances["id"]) - set(existing_output["id"]):
                 print("All prompts have been partitioned. Skipping.")
                 return
@@ -263,11 +263,7 @@ async def main():
     equivalence_alg = EQUIVALENCE_ALGS[args.alg]
 
     eval_dir = args.eval_dir
-    instances = load_dataset(
-        "json",
-        data_files=os.path.join(eval_dir, "generations.jsonl"),
-        split="train",
-    )
+    instances = datasets.Dataset.from_json(os.path.join(eval_dir, "generations.jsonl"))
 
     # Process instances and save results
     output_file = os.path.join(eval_dir, "partitions.jsonl")
