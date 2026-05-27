@@ -108,9 +108,9 @@ def calculate_sentence_bleu(reference, hypothesis):
 
 def calculate_rouge(reference, hypothesis):
     """计算单个句子的ROUGE分数"""
-    scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     scores = scorer.score(reference, hypothesis)
-    return scores['rougeL'].fmeasure
+    return scores['rouge1'].fmeasure, scores['rouge2'].fmeasure, scores['rougeL'].fmeasure
 
 def calculate_comet_score(model, source, reference, hypothesis):
     """计算单个句子的COMET分数"""
@@ -391,7 +391,9 @@ def main(args):
                             prefix_outputs[data_index] = prefix_outputs[data_index] + f"Output {pre_index}: " + representative_response + "\n"
             predictions = []
             individual_bleu_scores = []
-            individual_rouge_scores = []
+            individual_rouge1_scores = []
+            individual_rouge2_scores = []
+            individual_rougeL_scores = []
 
             # 收集所有源文本、参考文本和预测文本用于批量COMET评估
             sources = [example['text'] for example in test_data]
@@ -401,15 +403,19 @@ def main(args):
                 sentence_bleu_score = calculate_sentence_bleu(example['summary'], output)
                 individual_bleu_scores.append(sentence_bleu_score)
 
-                sentence_rouge_score = calculate_rouge(example['summary'], output)
-                individual_rouge_scores.append(sentence_rouge_score)
+                r1, r2, rL = calculate_rouge(example['summary'], output)
+                individual_rouge1_scores.append(r1)
+                individual_rouge2_scores.append(r2)
+                individual_rougeL_scores.append(rL)
 
                 predictions.append({
                     "source_de": example['text'],
                     "reference_en": example['summary'],
                     "predicted_en": output,
                     "sentence_bleu": sentence_bleu_score,
-                    "sentence_rouge": sentence_rouge_score,
+                    "sentence_rouge1": r1,
+                    "sentence_rouge2": r2,
+                    "sentence_rougeL": rL,
                 })
 
             # 批量计算COMET分数
@@ -417,13 +423,24 @@ def main(args):
             batch_comet_score = calculate_batch_comet_score(comet_model, sources, references, outputs)
             print(f"Iteration {i} COMET score: {batch_comet_score:.4f}")
 
+            avg_rouge1 = np.mean(individual_rouge1_scores)
+            avg_rouge2 = np.mean(individual_rouge2_scores)
+            avg_rougeL = np.mean(individual_rougeL_scores)
+            avg_quality = (avg_rouge1 + avg_rouge2 + avg_rougeL) / 3
+
             print("Individual BLEU scores:", np.mean(individual_bleu_scores))
-            print("Individual ROUGE-1 scores:", np.mean(individual_rouge_scores))
+            print("Individual ROUGE-1 scores:", avg_rouge1)
+            print("Individual ROUGE-2 scores:", avg_rouge2)
+            print("Individual ROUGE-L scores:", avg_rougeL)
+            print("Avg Quality (ROUGE-1+2+L)/3:", avg_quality)
             print("Batch COMET score:", batch_comet_score)
 
             all_predictions[i] = {
                 "AVG_BLEU": np.mean(individual_bleu_scores),
-                "AVG_ROUGEL": np.mean(individual_rouge_scores),
+                "AVG_ROUGE1": avg_rouge1,
+                "AVG_ROUGE2": avg_rouge2,
+                "AVG_ROUGEL": avg_rougeL,
+                "AVG_QUALITY": avg_quality,
                 "AVG_COMET": batch_comet_score
             }
 
