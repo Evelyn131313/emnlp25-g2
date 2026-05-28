@@ -18,7 +18,29 @@ This report documents the reproduction of the main results from **G2: Guided Gen
 
 ---
 
-## Benchmark 1: WMT'14 DE→EN Translation
+## Benchmark 1: NoveltyBench Open-Ended Generation
+
+**Setup**: 20 prompts from the `curated` split of `yimingzhang/novelty-bench` (creative writing, randomness, factual knowledge, subjective opinion). G2 generates 10 diverse responses per prompt. Semantic distinctness is evaluated with an NLI-based equivalence classifier (`partition.py`); quality is scored with Skywork-Reward-Gemma-2-27B-v0.2.
+
+### NoveltyBench Score
+
+| Metric                                | Reproduced           | Paper                | Diff    |
+| ------------------------------------- | -------------------- | -------------------- | ------- |
+| Mean Distinct (↑ more diverse)       | **6.01** / 10  | **5.80** / 10  | +0.21   |
+| Mean Reward Score (↑ higher quality) | **7.681** / 10 | **7.790** / 10 | −0.109 |
+
+### Diversity Metrics (across all 10 outputs per input)
+
+| Metric                                                  | Reproduced       | Paper            | Diff     |
+| ------------------------------------------------------- | ---------------- | ---------------- | -------- |
+| EAD (↑ more diverse)                                   | 0.7677           | 0.7801           | −0.0124 |
+| Sentence-BERT distance (↑ more diverse)                | 0.3644           | 0.3791           | −0.0147 |
+| Self-BLEU QS (1 − self-BLEU₄, ↑ more diverse)        | 62.75%           | 64.72%           | −1.97%  |
+| **Div Score** `(EAD + Div-BLEU)/4 + SentBERT/2` | **0.5310** | **0.5464** | −0.0154 |
+
+---
+
+## Benchmark 2: WMT'14 DE→EN Translation
 
 **Setup**: 3,003 test sentences from WMT'14 (`wmt14`, `de-en`). G2 generates 5 diverse translations per sentence (iter 0 = greedy baseline, iter 1–4 = G2-guided). Quality measured with BLEU and COMET; diversity measured with EAD, Sentence-BERT distance, and Self-BLEU.
 
@@ -26,28 +48,37 @@ This report documents the reproduction of the main results from **G2: Guided Gen
 
 Reported metric: **Avg Quality = (BLEU + COMET) / 2**
 
-| Iteration            | BLEU   | COMET  | Avg Quality |
-| -------------------- | ------ | ------ | ----------- |
-| 0 (baseline, greedy) | 0.2783 | 0.8510 | 0.5647      |
-| 1                    | 0.2383 | 0.8352 | 0.5368      |
-| 2                    | 0.2290 | 0.8344 | 0.5317      |
-| 3                    | 0.2300 | 0.8333 | 0.5317      |
-| 4                    | 0.2292 | 0.8353 | 0.5323      |
-| **Avg (iter 0–4)**   | —      | —      | **0.5394**  |
-| **Avg (iter 1–4)**   | —      | —      | **0.5331**  |
+| Iteration                 | BLEU   | COMET  | Avg Quality      |
+| ------------------------- | ------ | ------ | ---------------- |
+| 0 (baseline, greedy)      | 0.2783 | 0.8510 | 0.5647           |
+| 1                         | 0.2383 | 0.8352 | 0.5368           |
+| 2                         | 0.2290 | 0.8344 | 0.5317           |
+| 3                         | 0.2300 | 0.8333 | 0.5317           |
+| 4                         | 0.2292 | 0.8353 | 0.5323           |
+| **Avg (iter 0–4)** | —     | —     | **0.5394** |
+| **Avg (iter 1–4)** | —     | —     | **0.5331** |
 
 ### Diversity Metrics (across all 5 outputs per input)
 
-| Metric                                           | Mean   | Std      |
-| ------------------------------------------------ | ------ | -------- |
-| EAD (↑ more diverse)                            | 0.5650 | ±0.1332 |
-| Sentence-BERT distance (↑ more diverse)         | 0.1104 | ±0.0795 |
-| Self-BLEU QS (1 − self-BLEU₄, ↑ more diverse) | 33.17% | —       |
-| **Div Score** `(EAD + Div-BLEU)/4 + SentBERT/2` | **0.2794** | — |
+| Metric                                                  | Mean             | Std      |
+| ------------------------------------------------------- | ---------------- | -------- |
+| EAD (↑ more diverse)                                   | 0.5650           | ±0.1332 |
+| Sentence-BERT distance (↑ more diverse)                | 0.1104           | ±0.0795 |
+| Self-BLEU QS (1 − self-BLEU₄, ↑ more diverse)        | 33.17%           | —       |
+| **Div Score** `(EAD + Div-BLEU)/4 + SentBERT/2` | **0.2794** | —       |
+
+### Comparison with Paper (θ=0.3, est. from Figure)
+
+> Quality Score = Avg Quality × 100; Diversity Score = Div Score × 100
+
+| Metric          | Paper (est.) | Reproduced | Diff   |
+| --------------- | ------------ | ---------- | ------ |
+| Quality Score   | ~53.8        | 53.31      | −0.49 |
+| Diversity Score | ~27.6        | 27.94      | +0.34  |
 
 ---
 
-## Benchmark 2: XLSum Multilingual Summarization
+## Benchmark 3: XLSum Multilingual Summarization
 
 **Setup**: 1,000 test examples from HuggingFace (`GEM/xlsum`). G2 generates 5 diverse summaries per article. Quality measured with ROUGE-1, ROUGE-2, and ROUGE-L (averaged); diversity measured with EAD, Sentence-BERT distance, and Self-BLEU.
 
@@ -67,34 +98,21 @@ Reported metric: **Avg Quality = (ROUGE-1 + ROUGE-2 + ROUGE-L) / 3**
 
 ### Diversity Metrics (across all 5 outputs per input)
 
-| Metric                                           | Mean   | Std      |
-| ------------------------------------------------ | ------ | -------- |
-| EAD (↑ more diverse)                            | 0.7441 | ±0.0583 |
-| Sentence-BERT distance (↑ more diverse)         | 0.2036 | ±0.0542 |
-| Self-BLEU QS (1 − self-BLEU₄, ↑ more diverse) | 58.11% | —       |
-| **Div Score** `(EAD + Div-BLEU)/4 + SentBERT/2` | **0.4331** | — |
+| Metric                                                  | Mean             | Std      |
+| ------------------------------------------------------- | ---------------- | -------- |
+| EAD (↑ more diverse)                                   | 0.7441           | ±0.0583 |
+| Sentence-BERT distance (↑ more diverse)                | 0.2036           | ±0.0542 |
+| Self-BLEU QS (1 − self-BLEU₄, ↑ more diverse)        | 58.11%           | —       |
+| **Div Score** `(EAD + Div-BLEU)/4 + SentBERT/2` | **0.4331** | —       |
 
----
+### Comparison with Paper (θ=0.3, est. from Figure)
 
-## Benchmark 3: NoveltyBench Open-Ended Generation
+> Quality Score = Avg Quality × 100; Diversity Score = Div Score × 100
 
-**Setup**: 20 prompts from the `curated` split of `yimingzhang/novelty-bench` (creative writing, randomness, factual knowledge, subjective opinion). G2 generates 10 diverse responses per prompt. Semantic distinctness is evaluated with an NLI-based equivalence classifier (`partition.py`); quality is scored with Skywork-Reward-Gemma-2-27B-v0.2.
-
-### NoveltyBench Score
-
-| Metric                                | Reproduced     | Paper          | Diff   |
-| ------------------------------------- | -------------- | -------------- | ------ |
-| Mean Distinct (↑ more diverse)       | **6.01** / 10  | **5.80** / 10  | +0.21  |
-| Mean Reward Score (↑ higher quality) | **7.681** / 10 | **7.790** / 10 | −0.109 |
-
-### Diversity Metrics (across all 10 outputs per input)
-
-| Metric                                           | Reproduced | Paper  | Diff   |
-| ------------------------------------------------ | ---------- | ------ | ------ |
-| EAD (↑ more diverse)                            | 0.7677     | 0.7801 | −0.0124 |
-| Sentence-BERT distance (↑ more diverse)         | 0.3644     | 0.3791 | −0.0147 |
-| Self-BLEU QS (1 − self-BLEU₄, ↑ more diverse) | 62.75%     | 64.72% | −1.97%  |
-| **Div Score** `(EAD + Div-BLEU)/4 + SentBERT/2` | **0.5310** | **0.5464** | −0.0154 |
+| Metric          | Paper (est.) | Reproduced | Diff  |
+| --------------- | ------------ | ---------- | ----- |
+| Quality Score   | ~14.6        | N/A        | —    |
+| Diversity Score | ~43.0        | 43.31      | +0.31 |
 
 ---
 
